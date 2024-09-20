@@ -1,0 +1,7 @@
+../Core/Src/bh1750.c:24:15:BH1750_Init	16	static
+../Core/Src/bh1750.c:38:15:BH1750_Reset	24	static
+../Core/Src/bh1750.c:52:15:BH1750_PowerState	24	static
+../Core/Src/bh1750.c:64:15:BH1750_SetMode	24	static
+../Core/Src/bh1750.c:79:15:BH1750_SetMtreg	32	static
+../Core/Src/bh1750.c:112:15:BH1750_TriggerManualConversion	8	static
+../Core/Src/bh1750.c:124:15:BH1750_ReadLight	32	static
