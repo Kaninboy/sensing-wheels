@@ -126,12 +126,13 @@ int main(void)
 
   while (1)
   {
-	  // ACCLE/GYRO
+	  // Accelerometer and Gyroscope
 	  MPU6050_Read_All(&hi2c1, &MPU6050);
-	  size = sprintf(buffer, "Acc/Grypo: %f %f\r\n", MPU6050.KalmanAngleX, MPU6050.KalmanAngleY);
+	  size = sprintf(buffer, "Gyro X/Y: %f %f\r\nAcc: %f %f %f %f", MPU6050.KalmanAngleX, MPU6050.KalmanAngleY, MPU6050.Ax, MPU6050.Ay, MPU6050.Az, MPU6050.Temperature);
 	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
 
 
+	  // Ultrasonic sensor reading distance
 	  sr04_trigger(&sr04);
 	  size = sprintf(buffer, "Distance: %d\n\r", sr04.distance);
 	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
@@ -148,7 +149,7 @@ int main(void)
 	  }
 
 
-
+	  // If brightness is less than 50 lux, then open the front lamp
 	  if(BH1750_lux < 50){
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 	  }
@@ -156,17 +157,50 @@ int main(void)
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 	  }
 
-	  if (MPU6050.KalmanAngleX > 35 || MPU6050.KalmanAngleX < -35 || sr04.distance < 100) {
-		  size = sprintf(buffer, "BANGGG", BH1750_lux);
-		  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
-
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
-		  HAL_Delay(10);
+	  // if temp > 30, then open the temp lamp
+	  if(MPU6050.Temperature > 26) {
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
 	  } else {
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET);
 	  }
 
+	  // Gyroscope: MPU6050.KalmanAngleX
+	  // more than 20 degrees -> Yellow
+	  // more than 40 degrees -> Red + Buzzer
+	  // Ultrasonic: sr04.distance
+	  // less than 200 mm -> Yellow
+	  // less than 100 mm -> Red + Buzzer
 
+	  // Red + Buzzer: Gyro > 40 or Distance < 100
+	  if (MPU6050.KalmanAngleX > 40 || MPU6050.KalmanAngleX < -40 || sr04.distance < 100) {
+		  size = sprintf(buffer, "RED", BH1750_lux);
+		  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
+
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+		  HAL_Delay(10);
+	  } else if (MPU6050.KalmanAngleX > 20 || MPU6050.KalmanAngleX < -20 || sr04.distance < 200) {
+		  size = sprintf(buffer, "Yellow", BH1750_lux);
+		  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
+
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+		  HAL_Delay(10);
+	  } else {
+		  size = sprintf(buffer, "Green", BH1750_lux);
+		  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
+
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+		  HAL_Delay(10);
+	  }
+	  HAL_Delay(100);
 
 
 
@@ -401,7 +435,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|LD2_Pin|GPIO_PIN_6|GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, Front_Lamp_Pin|LD2_Pin|Buzzer_Pin|GPIO_PIN_9, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(Temp_Lamp_GPIO_Port, Temp_Lamp_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, Green_Light_Pin|Yellow_Light_Pin|Red_Light_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -409,12 +449,26 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA4 LD2_Pin PA6 PA9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4|LD2_Pin|GPIO_PIN_6|GPIO_PIN_9;
+  /*Configure GPIO pins : Front_Lamp_Pin LD2_Pin Buzzer_Pin PA9 */
+  GPIO_InitStruct.Pin = Front_Lamp_Pin|LD2_Pin|Buzzer_Pin|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Temp_Lamp_Pin */
+  GPIO_InitStruct.Pin = Temp_Lamp_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Temp_Lamp_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Green_Light_Pin Yellow_Light_Pin Red_Light_Pin */
+  GPIO_InitStruct.Pin = Green_Light_Pin|Yellow_Light_Pin|Red_Light_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

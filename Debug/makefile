@@ -60,8 +60,8 @@ all: main-build
 main-build: BH1750.elf secondary-outputs
 
 # Tool invocations
-BH1750.elf BH1750.map: $(OBJS) $(USER_OBJS) /Users/thana/STM32CubeIDE/workspace_1.16.0/BH1750/STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "BH1750.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/thana/STM32CubeIDE/workspace_1.16.0/BH1750/STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BH1750.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+BH1750.elf BH1750.map: $(OBJS) $(USER_OBJS) C:\Users\asus\STM32CubeIDE\workspace_1.16.0\BH1750\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "BH1750.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\asus\STM32CubeIDE\workspace_1.16.0\BH1750\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BH1750.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
