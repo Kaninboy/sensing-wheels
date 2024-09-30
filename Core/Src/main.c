@@ -46,11 +46,14 @@
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
 
+TIM_HandleTypeDef htim1;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 MPU6050_t MPU6050;
 float BH1750_lux;
+sr04_t sr04;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,6 +62,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_I2C2_Init(void);
+static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -100,12 +104,18 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   MX_I2C2_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   while (MPU6050_Init(&hi2c1) == 1);
 
   BH1750_Init(&hi2c2);
   BH1750_SetMode(CONTINUOUS_HIGH_RES_MODE_2);
 
+  sr04.trig_port = GPIOA;
+  sr04.trig_pin = GPIO_PIN_9;
+  sr04.echo_htim = &htim1;
+  sr04.echo_channel = TIM_CHANNEL_1;
+  sr04_init(&sr04);
 
   /* USER CODE END 2 */
 
@@ -121,18 +131,23 @@ int main(void)
 	  size = sprintf(buffer, "Acc/Grypo: %f %f\r\n", MPU6050.KalmanAngleX, MPU6050.KalmanAngleY);
 	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
 
-	  size = sprintf(buffer, "BH1750: %.2f\r\n", BH1750_lux);
+
+	  sr04_trigger(&sr04);
+	  size = sprintf(buffer, "Distance: %d\n\r", sr04.distance);
 	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
+
 
 	  // LUX
 	  if(BH1750_OK == BH1750_ReadLight(&BH1750_lux))
 	  {
-//		  size = sprintf(buffer, "BH1750: %.2f\n\r", BH1750_lux);
-//	  	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
+		  size = sprintf(buffer, "BH1750: %.2f\n\r", BH1750_lux);
+	  	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
 	  } else {
 	      size = sprintf(buffer, "ERROR\r\n");
 	  	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
 	  }
+
+
 
 	  if(BH1750_lux < 50){
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
@@ -141,7 +156,7 @@ int main(void)
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 	  }
 
-	  if (MPU6050.KalmanAngleX > 35 || MPU6050.KalmanAngleX < -35) {
+	  if (MPU6050.KalmanAngleX > 35 || MPU6050.KalmanAngleX < -35 || sr04.distance < 100) {
 		  size = sprintf(buffer, "BANGGG", BH1750_lux);
 		  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
 
@@ -150,6 +165,7 @@ int main(void)
 	  } else {
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
 	  }
+
 
 
 
@@ -276,6 +292,65 @@ static void MX_I2C2_Init(void)
 }
 
 /**
+  * @brief TIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM1_Init(void)
+{
+
+  /* USER CODE BEGIN TIM1_Init 0 */
+
+  /* USER CODE END TIM1_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_IC_InitTypeDef sConfigIC = {0};
+
+  /* USER CODE BEGIN TIM1_Init 1 */
+
+  /* USER CODE END TIM1_Init 1 */
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 72;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 65535;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim1, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM1_Init 2 */
+
+  /* USER CODE END TIM1_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -326,7 +401,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|LD2_Pin|GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|LD2_Pin|GPIO_PIN_6|GPIO_PIN_9, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -334,8 +409,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA4 LD2_Pin PA6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4|LD2_Pin|GPIO_PIN_6;
+  /*Configure GPIO pins : PA4 LD2_Pin PA6 PA9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4|LD2_Pin|GPIO_PIN_6|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
