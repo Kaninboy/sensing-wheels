@@ -1750,11 +1750,11 @@ int main(void)
  8001252:	f001 fe71 	bl	8002f38 <HAL_GPIO_WritePin>
 	  }
 
-	  // if temp > 30, then open the temp lamp
-	  if(MPU6050.Temperature > 26) {
+	  // if temp > 29, then open the temp lamp
+	  if(MPU6050.Temperature > 29) {
  8001256:	4b59      	ldr	r3, [pc, #356]	@ (80013bc <main+0x2f4>)
  8001258:	edd3 7a10 	vldr	s15, [r3, #64]	@ 0x40
- 800125c:	eeb3 7a0a 	vmov.f32	s14, #58	@ 0x41d00000  26.0
+ 800125c:	eeb3 7a0d 	vmov.f32	s14, #61	@ 0x41e80000  29.0
  8001260:	eef4 7ac7 	vcmpe.f32	s15, s14
  8001264:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  8001268:	dd05      	ble.n	8001276 <main+0x1ae>

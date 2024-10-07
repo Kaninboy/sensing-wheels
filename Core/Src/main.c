@@ -157,8 +157,8 @@ int main(void)
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 	  }
 
-	  // if temp > 30, then open the temp lamp
-	  if(MPU6050.Temperature > 26) {
+	  // if temp > 29, then open the temp lamp
+	  if(MPU6050.Temperature > 29) {
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);
 	  } else {
 		  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_RESET);
