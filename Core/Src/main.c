@@ -126,9 +126,9 @@ int main(void)
 
   while (1)
   {
-	  // Accelerometer and Gyroscope
+	  // Gyroscope and Thermometer
 	  MPU6050_Read_All(&hi2c1, &MPU6050);
-	  size = sprintf(buffer, "Gyro X/Y: %f %f\r\nAcc: %f %f %f %f", MPU6050.KalmanAngleX, MPU6050.KalmanAngleY, MPU6050.Ax, MPU6050.Ay, MPU6050.Az, MPU6050.Temperature);
+	  size = sprintf(buffer, "Gyro X/Y: %f %f\r\nTemp: %f\r\n", MPU6050.KalmanAngleX, MPU6050.KalmanAngleY, MPU6050.Temperature);
 	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
 
 
@@ -138,7 +138,7 @@ int main(void)
 	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
 
 
-	  // LUX
+	  // Lux Meter
 	  if(BH1750_OK == BH1750_ReadLight(&BH1750_lux))
 	  {
 		  size = sprintf(buffer, "BH1750: %.2f\n\r", BH1750_lux);
@@ -165,14 +165,14 @@ int main(void)
 	  }
 
 	  // Gyroscope: MPU6050.KalmanAngleX
-	  // more than 20 degrees -> Yellow
-	  // more than 40 degrees -> Red + Buzzer
+	  // more than 15 degrees -> Yellow
+	  // more than 30 degrees -> Red + Buzzer
 	  // Ultrasonic: sr04.distance
 	  // less than 200 mm -> Yellow
 	  // less than 100 mm -> Red + Buzzer
 
-	  // Red + Buzzer: Gyro > 40 or Distance < 100
-	  if (MPU6050.KalmanAngleX > 40 || MPU6050.KalmanAngleX < -40 || sr04.distance < 100) {
+	  if (MPU6050.KalmanAngleX > 30 || MPU6050.KalmanAngleX < -30 || sr04.distance < 100) {
+		  // Red + Buzzer: Angle > 30 degree or Distance < 100 mm
 		  size = sprintf(buffer, "RED", BH1750_lux);
 		  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
 
@@ -181,7 +181,8 @@ int main(void)
 		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
 		  HAL_Delay(10);
-	  } else if (MPU6050.KalmanAngleX > 20 || MPU6050.KalmanAngleX < -20 || sr04.distance < 200) {
+	  } else if (MPU6050.KalmanAngleX > 15 || MPU6050.KalmanAngleX < -15 || sr04.distance < 200) {
+		  // Yellow: Angle > 15 degree or Distance < 200 mm
 		  size = sprintf(buffer, "Yellow", BH1750_lux);
 		  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
 
@@ -191,6 +192,7 @@ int main(void)
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
 		  HAL_Delay(10);
 	  } else {
+		  // Green: Normal
 		  size = sprintf(buffer, "Green", BH1750_lux);
 		  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, size, 100);
 

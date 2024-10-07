@@ -1775,7 +1775,7 @@ int main(void)
 	  // less than 100 mm -> Red + Buzzer
 
 	  // Red + Buzzer: Gyro > 40 or Distance < 100
-	  if (MPU6050.KalmanAngleX > 40 || MPU6050.KalmanAngleX < -40 || sr04.distance < 100) {
+	  if (MPU6050.KalmanAngleX > 30 || MPU6050.KalmanAngleX < -30 || sr04.distance < 100) {
  8001280:	4b4e      	ldr	r3, [pc, #312]	@ (80013bc <main+0x2f4>)
  8001282:	e9d3 0112 	ldrd	r0, r1, [r3, #72]	@ 0x48
  8001286:	f04f 0200 	mov.w	r2, #0
@@ -1840,7 +1840,7 @@ int main(void)
  800130c:	200a      	movs	r0, #10
  800130e:	f001 fb59 	bl	80029c4 <HAL_Delay>
  8001312:	e0a2      	b.n	800145a <main+0x392>
-	  } else if (MPU6050.KalmanAngleX > 20 || MPU6050.KalmanAngleX < -20 || sr04.distance < 200) {
+	  } else if (MPU6050.KalmanAngleX > 15 || MPU6050.KalmanAngleX < -15 || sr04.distance < 200) {
  8001314:	4b29      	ldr	r3, [pc, #164]	@ (80013bc <main+0x2f4>)
  8001316:	e9d3 0112 	ldrd	r0, r1, [r3, #72]	@ 0x48
  800131a:	f04f 0200 	mov.w	r2, #0
@@ -1919,12 +1919,12 @@ int main(void)
  80013d4:	08009cfc 	.word	0x08009cfc
  80013d8:	42480000 	.word	0x42480000
  80013dc:	40020800 	.word	0x40020800
- 80013e0:	40440000 	.word	0x40440000
- 80013e4:	c0440000 	.word	0xc0440000
+ 80013e0:	403e0000 	.word	0x403e0000
+ 80013e4:	c03e0000 	.word	0xc03e0000
  80013e8:	08009d04 	.word	0x08009d04
  80013ec:	40020400 	.word	0x40020400
- 80013f0:	40340000 	.word	0x40340000
- 80013f4:	c0340000 	.word	0xc0340000
+ 80013f0:	402e0000 	.word	0x402e0000
+ 80013f4:	c02e0000 	.word	0xc02e0000
  80013f8:	08009d08 	.word	0x08009d08
 	  } else {
 		  size = sprintf(buffer, "Green", BH1750_lux);
