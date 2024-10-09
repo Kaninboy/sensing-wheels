@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/Kaninboy/sensing-wheels">
-    <img src="/logo.png" alt="Logo" width="80" height="80">
+    <img src="/logo.png" alt="Logo" width="140" height="80">
   </a>
 <h3 align="center">Sensing Wheels</h3>
   <p align="center">
