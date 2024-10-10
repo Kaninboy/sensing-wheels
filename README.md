@@ -15,6 +15,13 @@ The goal is to help cyclists avoid accidents, manage instability, and ride safel
 
 This project is a part of the course 2147336 Internet of Things
 
+## Demo Video
+
+https://github.com/user-attachments/assets/a92c75ce-c58a-4fe6-a0bb-2ba09f3b745f
+
+
+
+
 ## Features
 - **Automatic Light Detection**: The front light of the bicycle turns on automatically when ambient light is low, using the BH1750 light sensor.
 - **Obstacles Detection**: The ultrasonic sensor (SR04) detects obstacles and vehicles and triggers a warning light and sound if they are too close.
